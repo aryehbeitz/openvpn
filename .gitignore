@@ -1,0 +1,24 @@
+# Never commit certificates, keys, or client profiles
+*.key
+*.crt
+*.pem
+*.ovpn
+*.req
+*.csr
+
+# PKI directory (contains all certificates and keys)
+pki/
+
+# Client profiles directory
+openvpn-clients/
+
+# Certificate Authority directory
+openvpn-ca/
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
+*~
