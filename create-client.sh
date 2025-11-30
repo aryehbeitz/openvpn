@@ -96,8 +96,14 @@ $(cat $CA_DIR/pki/ta.key)
 </tls-auth>
 EOF
 
-# Set proper permissions
+# Set proper permissions and ownership
 chmod 600 $CLIENT_DIR/${CLIENT_NAME}.ovpn
+
+# Change ownership to the user who ran sudo (not root)
+if [ -n "$SUDO_USER" ]; then
+    chown -R $SUDO_USER:$SUDO_USER $OUTPUT_DIR
+    echo "Ownership set to: $SUDO_USER"
+fi
 
 echo ""
 echo "✓ Client profile created successfully!"
