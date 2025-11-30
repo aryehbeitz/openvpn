@@ -44,6 +44,24 @@ push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-option DNS 8.8.8.8"
 push "dhcp-option DNS 8.8.4.4"
 
+# MTU optimization for mobile devices
+tun-mtu 1400
+mssfix 1360
+push "tun-mtu 1400"
+push "mssfix 1360"
+
+# Compression for better performance
+compress lz4-v2
+push "compress lz4-v2"
+
+# Performance tuning
+sndbuf 393216
+rcvbuf 393216
+push "sndbuf 393216"
+push "rcvbuf 393216"
+fast-io
+tcp-nodelay
+
 # Client configuration
 keepalive 10 120
 cipher AES-256-GCM
