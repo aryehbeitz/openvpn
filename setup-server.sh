@@ -53,8 +53,9 @@ push "tun-mtu 1500"
 push "mssfix 1440"
 
 # Compression for better performance
+# Note: Not pushing compression to avoid conflicts with desktop clients
+# Clients can enable compression in their config if supported
 compress lz4-v2
-push "compress lz4-v2"
 
 # Performance tuning - increased buffer sizes for better throughput
 sndbuf 1048576

@@ -20,7 +20,8 @@ auth SHA256
 key-direction 1
 
 # Performance optimizations
-# Compression is pushed by the server, do not set it here
+# Compression - enable if your client supports it (most do)
+compress lz4-v2
 # Buffer sizes are pushed by the server
 
 verb 3
