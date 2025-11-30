@@ -44,32 +44,39 @@ push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-option DNS 8.8.8.8"
 push "dhcp-option DNS 8.8.4.4"
 
-# MTU optimization for mobile devices
-tun-mtu 1400
-mssfix 1360
-push "tun-mtu 1400"
-push "mssfix 1360"
+# MTU optimization - larger MTU for better throughput
+# Fragment disabled for better performance (let system handle it)
+# MSS fix set to optimize TCP traffic
+tun-mtu 1500
+mssfix 1440
+push "tun-mtu 1500"
+push "mssfix 1440"
 
 # Compression for better performance
 compress lz4-v2
 push "compress lz4-v2"
 
-# Performance tuning
-sndbuf 393216
-rcvbuf 393216
-push "sndbuf 393216"
-push "rcvbuf 393216"
+# Performance tuning - increased buffer sizes for better throughput
+sndbuf 1048576
+rcvbuf 1048576
+push "sndbuf 1048576"
+push "rcvbuf 1048576"
 fast-io
-tcp-nodelay
 
 # Client configuration
 keepalive 10 120
-cipher AES-256-GCM
-auth SHA256
+ping-timer-rem
 user nobody
 group nogroup
 persist-key
 persist-tun
+
+# Modern cipher - AES-128-GCM is faster than AES-256-GCM with same security for VPN
+# Allow negotiation of best cipher (AES-128-GCM preferred for speed)
+data-ciphers AES-128-GCM:AES-256-GCM:CHACHA20-POLY1305
+data-ciphers-fallback AES-128-GCM
+cipher AES-128-GCM
+auth SHA256
 
 # Logging
 status /var/log/openvpn/openvpn-status.log

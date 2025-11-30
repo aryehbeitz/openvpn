@@ -74,12 +74,16 @@ group nogroup
 persist-key
 persist-tun
 remote-cert-tls server
-cipher AES-256-GCM
+# Modern cipher - allow negotiation for best performance
+data-ciphers AES-128-GCM:AES-256-GCM:CHACHA20-POLY1305
+data-ciphers-fallback AES-128-GCM
+cipher AES-128-GCM
 auth SHA256
 key-direction 1
 
 # Performance optimizations
-compress lz4-v2
+# Compression is pushed by the server, do not set it here
+# Buffer sizes are pushed by the server
 
 verb 3
 
