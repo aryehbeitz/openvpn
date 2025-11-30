@@ -9,7 +9,10 @@
 # PKI directory (contains all certificates and keys)
 pki/
 
-# Client profiles directory
+# Client profiles directory (in repo)
+clients/
+
+# Client profiles directory (old location)
 openvpn-clients/
 
 # Certificate Authority directory

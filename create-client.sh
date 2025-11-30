@@ -20,7 +20,8 @@ fi
 
 CLIENT_NAME="$1"
 CA_DIR=~/openvpn-ca
-OUTPUT_DIR=~/openvpn-clients
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+OUTPUT_DIR=$SCRIPT_DIR/clients
 CLIENT_DIR=$OUTPUT_DIR/$CLIENT_NAME
 
 # Validate client name

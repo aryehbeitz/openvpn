@@ -58,20 +58,20 @@ sudo ./create-client.sh phone
 sudo ./create-client.sh work-computer
 ```
 
-Client profiles are saved to: `~/openvpn-clients/<client-name>/<client-name>.ovpn`
+Client profiles are saved to: `~/dev/vpn/clients/<client-name>/<client-name>.ovpn`
 
 ## Downloading Client Profiles
 
 ### Option 1: SCP (from your local machine)
 
 ```bash
-scp user@server-ip:~/openvpn-clients/laptop/laptop.ovpn .
+scp user@server-ip:~/dev/vpn/clients/laptop/laptop.ovpn .
 ```
 
 ### Option 2: Display and copy
 
 ```bash
-cat ~/openvpn-clients/laptop/laptop.ovpn
+cat ~/dev/vpn/clients/laptop/laptop.ovpn
 ```
 
 Then copy the output to a `.ovpn` file on your client device.
@@ -180,7 +180,7 @@ sudo journalctl -u openvpn-server@server -n 50
 
 - `/etc/openvpn/server/` - Server config and certificates
 - `~/openvpn-ca/` - Certificate Authority and PKI
-- `~/openvpn-clients/` - Generated client profiles
+- `~/dev/vpn/clients/` - Generated client profiles (in repo, gitignored)
 - `/var/log/openvpn/` - Server logs
 
 ## License
