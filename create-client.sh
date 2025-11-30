@@ -55,9 +55,9 @@ else
     ./easyrsa --batch build-client-full $CLIENT_NAME nopass
 fi
 
-# Get server IP
+# Get server IP (prefer IPv4)
 echo "[2/3] Detecting server IP..."
-PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || echo "YOUR_SERVER_IP")
+PUBLIC_IP=$(curl -4 -s ifconfig.me 2>/dev/null || curl -4 -s icanhazip.com 2>/dev/null || curl -s ifconfig.me || echo "YOUR_SERVER_IP")
 
 # Create client configuration file
 echo "[3/3] Creating client profile..."

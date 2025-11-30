@@ -11,9 +11,9 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Detect public IP
+# Detect public IP (prefer IPv4)
 echo "[1/5] Detecting server public IP..."
-PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || echo "UNKNOWN")
+PUBLIC_IP=$(curl -4 -s ifconfig.me 2>/dev/null || curl -4 -s icanhazip.com 2>/dev/null || curl -s ifconfig.me || echo "UNKNOWN")
 echo "Detected IP: $PUBLIC_IP"
 
 # Get network interface
@@ -63,24 +63,52 @@ EOF
 # Create log directory
 mkdir -p /var/log/openvpn
 
-# Set up NAT/Firewall rules
+# Set up NAT/Firewall rules with UFW
 echo "[4/5] Configuring firewall rules..."
 
-# Add iptables rules for NAT
-iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o $DEFAULT_IFACE -j MASQUERADE
-
-# Save iptables rules
-if command -v netfilter-persistent > /dev/null; then
-    netfilter-persistent save
-elif command -v iptables-save > /dev/null; then
-    iptables-save > /etc/iptables/rules.v4
+# Check if UFW is installed
+if ! command -v ufw > /dev/null; then
+    echo "Installing UFW..."
+    apt-get install -y ufw
 fi
 
-# Allow OpenVPN through UFW if it's active
-if command -v ufw > /dev/null && ufw status | grep -q "Status: active"; then
-    ufw allow 1194/udp
-    echo "UFW rule added for port 1194/udp"
+# Configure UFW
+echo "Configuring UFW..."
+
+# Allow SSH (to prevent lockout)
+ufw allow 22/tcp
+
+# Allow OpenVPN
+ufw allow 1194/udp
+
+# Enable IP forwarding in UFW
+if ! grep -q "^DEFAULT_FORWARD_POLICY=\"ACCEPT\"" /etc/default/ufw; then
+    sed -i 's/DEFAULT_FORWARD_POLICY="DROP"/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw
 fi
+
+# Add NAT rules to UFW before.rules
+UFW_BEFORE_RULES="/etc/ufw/before.rules"
+if ! grep -q "# START OPENVPN RULES" $UFW_BEFORE_RULES; then
+    # Backup original file
+    cp $UFW_BEFORE_RULES ${UFW_BEFORE_RULES}.backup
+
+    # Add NAT rules at the beginning (after initial comments)
+    sed -i "/^# End required lines/a\\
+\\
+# START OPENVPN RULES\\
+# NAT table rules\\
+*nat\\
+:POSTROUTING ACCEPT [0:0]\\
+# Allow traffic from OpenVPN client to $DEFAULT_IFACE\\
+-A POSTROUTING -s 10.8.0.0/24 -o $DEFAULT_IFACE -j MASQUERADE\\
+COMMIT\\
+# END OPENVPN RULES" $UFW_BEFORE_RULES
+fi
+
+# Enable UFW
+echo "y" | ufw enable
+
+echo "UFW configured and enabled"
 
 # Enable and start OpenVPN
 echo "[5/5] Starting OpenVPN server..."
