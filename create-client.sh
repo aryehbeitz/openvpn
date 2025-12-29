@@ -65,8 +65,8 @@ echo "[3/3] Creating client profile..."
 cat > $CLIENT_DIR/${CLIENT_NAME}.ovpn << EOF
 client
 dev tun
-proto udp
-remote $PUBLIC_IP 1194
+proto tcp
+remote $PUBLIC_IP 995
 resolv-retry infinite
 nobind
 user nobody

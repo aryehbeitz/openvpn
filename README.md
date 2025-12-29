@@ -102,10 +102,10 @@ sudo openvpn --config client.ovpn
 ## Server Configuration
 
 Default settings:
-- Port: 1194 (UDP)
+- Port: 995 (TCP)
 - VPN Network: 10.8.0.0/24
 - DNS: 8.8.8.8, 8.8.4.4
-- Cipher: AES-256-GCM
+- Cipher: AES-128-GCM
 - Auth: SHA256
 
 Edit `/etc/openvpn/server/server.conf` to customize.
@@ -162,7 +162,7 @@ sudo journalctl -u openvpn-server@server -n 50
 
 ### Connection issues
 - Check firewall: `sudo ufw status`
-- Verify port 1194/UDP is open
+- Verify port 995/TCP is open
 - Check public IP in client profile matches server
 
 ### Can't access internet through VPN
