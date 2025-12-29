@@ -25,8 +25,9 @@ echo "Default interface: $DEFAULT_IFACE"
 echo "[3/5] Creating server configuration..."
 cat > /etc/openvpn/server/server.conf << EOF
 # OpenVPN Server Configuration
-port 1194
-proto udp
+# Using TCP 995 (former POP3S port) for better firewall traversal and obfuscation
+port 995
+proto tcp
 dev tun
 
 ca ca.crt
@@ -64,6 +65,9 @@ push "sndbuf 1048576"
 push "rcvbuf 1048576"
 fast-io
 
+# TCP-specific optimizations
+tcp-nodelay
+
 # Client configuration
 keepalive 10 120
 ping-timer-rem
@@ -83,7 +87,6 @@ auth SHA256
 status /var/log/openvpn/openvpn-status.log
 log-append /var/log/openvpn/openvpn.log
 verb 3
-explicit-exit-notify 1
 EOF
 
 # Create log directory
@@ -104,8 +107,8 @@ echo "Configuring UFW..."
 # Allow SSH (to prevent lockout)
 ufw allow 22/tcp
 
-# Allow OpenVPN
-ufw allow 1194/udp
+# Allow OpenVPN on TCP 995
+ufw allow 995/tcp comment 'OpenVPN'
 
 # Enable IP forwarding in UFW
 if ! grep -q "^DEFAULT_FORWARD_POLICY=\"ACCEPT\"" /etc/default/ufw; then
@@ -148,7 +151,7 @@ if systemctl is-active --quiet openvpn-server@server; then
     echo "✓ OpenVPN server is running!"
     echo ""
     echo "Server IP: $PUBLIC_IP"
-    echo "Server Port: 1194 (UDP)"
+    echo "Server Port: 995 (TCP) - using POP3S port for better firewall traversal"
     echo "VPN Network: 10.8.0.0/24"
     echo ""
     echo "Next step: Run ./create-client.sh <client-name> to create client profiles"

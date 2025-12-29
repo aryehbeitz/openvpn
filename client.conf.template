@@ -3,8 +3,8 @@
 
 client
 dev tun
-proto udp
-remote YOUR_SERVER_IP 1194
+proto tcp
+remote YOUR_SERVER_IP 995
 resolv-retry infinite
 nobind
 user nobody
