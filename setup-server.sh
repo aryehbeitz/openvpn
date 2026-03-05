@@ -121,17 +121,23 @@ if ! grep -q "# START OPENVPN RULES" $UFW_BEFORE_RULES; then
     # Backup original file
     cp $UFW_BEFORE_RULES ${UFW_BEFORE_RULES}.backup
 
-    # Add NAT rules at the beginning (after initial comments)
-    sed -i "/^# End required lines/a\\
-\\
-# START OPENVPN RULES\\
-# NAT table rules\\
+    # The *nat block MUST come before the *filter block in before.rules.
+    # Inject it at the very top, after the header comment block (before *filter).
+    sed -i "/^# Don't delete these required lines/i\\
+# START OPENVPN RULES - NAT table (must be before *filter block)\\
 *nat\\
 :POSTROUTING ACCEPT [0:0]\\
-# Allow traffic from OpenVPN client to $DEFAULT_IFACE\\
--A POSTROUTING -s 10.8.0.0/24 -o $DEFAULT_IFACE -j MASQUERADE\\
+-A POSTROUTING -s 10.8.0.0\\/24 -o $DEFAULT_IFACE -j MASQUERADE\\
 COMMIT\\
-# END OPENVPN RULES" $UFW_BEFORE_RULES
+# END OPENVPN RULES\\
+" $UFW_BEFORE_RULES
+
+    # Add tun0 forward rules inside the *filter block
+    sed -i "/^# ok icmp code for FORWARD/a\\
+\\
+# OpenVPN: allow forwarding for tun0\\
+-A ufw-before-forward -i tun0 -j ACCEPT\\
+-A ufw-before-forward -o tun0 -j ACCEPT" $UFW_BEFORE_RULES
 fi
 
 # Enable UFW
