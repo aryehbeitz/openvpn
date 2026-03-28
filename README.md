@@ -45,7 +45,17 @@ This:
 - Sets up firewall/NAT rules
 - Starts the OpenVPN service
 
-### 4. Create Client Profiles
+### 4. Open Cloud Provider Ports (if needed)
+
+**For Oracle Cloud:**
+```bash
+# If connection fails, run the included port opening script
+sudo ./open-port.sh
+```
+
+**For other cloud providers:** Ensure your Security Groups/Firewalls allow the OpenVPN port.
+
+### 5. Create Client Profiles
 
 ```bash
 sudo ./create-client.sh <client-name>
@@ -58,7 +68,7 @@ sudo ./create-client.sh phone
 sudo ./create-client.sh work-computer
 ```
 
-Client profiles are saved to: `~/dev/vpn/clients/<client-name>/<client-name>.ovpn`
+Client profiles are saved to: `clients/<client-name>/<client-name>.ovpn`
 
 ## Downloading Client Profiles
 
@@ -153,6 +163,55 @@ crl-verify crl.pem
 
 Then restart the server.
 
+## Oracle Cloud Setup
+
+### Quick Oracle Cloud Deployment
+
+**Recommended approach for Oracle Cloud:**
+
+1. **Use port 443** for better firewall traversal:
+```bash
+# After setup-server.sh, switch to port 443
+sudo systemctl stop nginx  # If nginx is running
+sudo sed -i 's/port 1194/port 443/' /etc/openvpn/server/server.conf
+sudo systemctl restart openvpn-server@server
+```
+
+2. **Configure Security Lists** via Oracle Console or OCI CLI:
+```bash
+# Install OCI CLI
+pipx install oci-cli
+oci setup config
+
+# Add Security List rule for OpenVPN
+oci network security-list update --security-list-id YOUR_SECURITY_LIST_ID \
+  --ingress-security-rules '[{
+    "description": "OpenVPN Server",
+    "protocol": "6",
+    "source": "0.0.0.0/0",
+    "tcp-options": {"destination-port-range": {"max": 443, "min": 443}}
+  }]' --force
+```
+
+3. **Handle Docker conflicts** (if Docker is installed):
+```bash
+# Add VPN forwarding rules before Docker rules
+sudo iptables -I FORWARD 1 -s 10.8.0.0/24 -j ACCEPT
+sudo iptables -I FORWARD 1 -d 10.8.0.0/24 -j ACCEPT
+```
+
+### Oracle Cloud Troubleshooting
+
+**Connection fails but server is running:**
+- Security List rules can take 3-10 minutes to propagate
+- Check both Security Lists and Network Security Groups
+- Port 443 typically propagates faster than port 1194
+
+**No internet access through VPN:**
+- Check for Docker iptables conflicts: `sudo iptables -L FORWARD -v`
+- Ensure correct TUN interface forwarding rules
+- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed diagnosis
+
 ## Troubleshooting
 
 ### Server won't start
@@ -162,12 +221,13 @@ sudo journalctl -u openvpn-server@server -n 50
 
 ### Connection issues
 - Check firewall: `sudo ufw status`
-- Verify port 995/TCP is open
+- Verify port is open: `nc -v SERVER_IP PORT`
 - Check public IP in client profile matches server
 
 ### Can't access internet through VPN
 - Verify IP forwarding: `sysctl net.ipv4.ip_forward`
 - Check NAT rules: `sudo iptables -t nat -L`
+- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive guide
 
 ## Security Notes
 

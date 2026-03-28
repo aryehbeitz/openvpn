@@ -19,7 +19,8 @@ if [ -z "$1" ]; then
 fi
 
 CLIENT_NAME="$1"
-CA_DIR=~/openvpn-ca
+CA_DIR=/root/openvpn-ca          # easyrsa PKI (runs as root)
+SERVER_DIR=/etc/openvpn          # server CA cert and ta.key
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUTPUT_DIR=$SCRIPT_DIR/clients
 CLIENT_DIR=$OUTPUT_DIR/$CLIENT_NAME
@@ -66,7 +67,7 @@ cat > $CLIENT_DIR/${CLIENT_NAME}.ovpn << EOF
 client
 dev tun
 proto tcp
-remote $PUBLIC_IP 995
+remote $PUBLIC_IP 80
 resolv-retry infinite
 nobind
 user nobody
@@ -74,22 +75,15 @@ group nogroup
 persist-key
 persist-tun
 remote-cert-tls server
-# Modern cipher - allow negotiation for best performance
 data-ciphers AES-128-GCM:AES-256-GCM:CHACHA20-POLY1305
 data-ciphers-fallback AES-128-GCM
 cipher AES-128-GCM
 auth SHA256
 key-direction 1
-
-# Performance optimizations
-# Compression - enable if your client supports it (most do)
-compress lz4-v2
-# Buffer sizes are pushed by the server
-
 verb 3
 
 <ca>
-$(cat $CA_DIR/pki/ca.crt)
+$(cat $SERVER_DIR/ca.crt)
 </ca>
 
 <cert>
@@ -101,7 +95,7 @@ $(cat $CA_DIR/pki/private/${CLIENT_NAME}.key)
 </key>
 
 <tls-auth>
-$(cat $CA_DIR/pki/ta.key)
+$(cat $SERVER_DIR/ta.key)
 </tls-auth>
 EOF
 
@@ -119,10 +113,5 @@ echo "✓ Client profile created successfully!"
 echo ""
 echo "Profile location: $CLIENT_DIR/${CLIENT_NAME}.ovpn"
 echo ""
-echo "Transfer this file to your client device and import it into your OpenVPN client."
-echo ""
 echo "Download command (from your local machine):"
 echo "  scp $(whoami)@$PUBLIC_IP:$CLIENT_DIR/${CLIENT_NAME}.ovpn ."
-echo ""
-echo "Or display the profile content:"
-echo "  cat $CLIENT_DIR/${CLIENT_NAME}.ovpn"
